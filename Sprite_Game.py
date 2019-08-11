@@ -4,6 +4,7 @@ from pygame.locals import *
 import pygame
 import sys
 import os
+from time import sleep
 
 # intalize Pygame
 pygame.init()
@@ -18,6 +19,8 @@ img_folder = os.path.join(game_folder, 'images')
 player_img = pygame.image.load(os.path.join(img_folder, 'happy_face.png')).convert()
 food_img = pygame.image.load(os.path.join(img_folder, 'food.png')).convert()
 BAD_food_img = pygame.image.load(os.path.join(img_folder, 'bad_food.png')).convert()
+fire_ball_img = pygame.image.load(os.path.join(img_folder, 'fire_ball.png')).convert()
+enemy_img = pygame.image.load(os.path.join(img_folder, 'enemy.png')).convert()
 
 # Varible Used "while" Loop
 done = False
@@ -75,6 +78,14 @@ class Player(pygame.sprite.Sprite):
         width, height = self.image.get_size()
         self.image = pygame.transform.scale(player_img, (int(width - 20), int(height - 20)))
         self.rect = self.rect.inflate(-20,-20)
+    def super_anti_grow(self):
+        width, height = self.image.get_size()
+        self.image = pygame.transform.scale(player_img, (int(width - 40),int(height - 40)))
+        self.rect = self.rect.inflate(-40,-40)
+    def super_grow(self):
+        width, height = self.image.get_size()
+        self.image = pygame.transform.scale(player_img, (int(width + 40),int(height + 40)))
+        self.rect = self.rect.inflate(40,40)
 
 class Food(pygame.sprite.Sprite):
     def __init__(self):
@@ -99,7 +110,7 @@ class BAD_Food(pygame.sprite.Sprite):
         self.image = BAD_food_img
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
-        self.rect.x = randint(0,x_size*5)
+        self.rect.x = randint(-x_size*2.5,x_size*2.5)
         self.rect.y = randint(0,y_size*5)
     def move_right(self):
         self.rect.x += -20
@@ -110,10 +121,40 @@ class BAD_Food(pygame.sprite.Sprite):
     def move_down(self):
         self.rect.y += -20
 
+class FireBall(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = fire_ball_img
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.rect.x = x_size/2
+        self.rect.y = y_size/2
+        self.cooldown = 4000
+        self.last = pygame.time.get_ticks()
+    def move(self):
+        self.rect.x += 20
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = enemy_img
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.rect.x = randint(-x_size*2.5,x_size*2.5)
+        self.rect.y = randint(0,y_size*5)
+    def move_right(self):
+        self.rect.x += -20
+    def move_left(self):
+        self.rect.x += 20
+    def move_up(self):
+        self.rect.y += 20
+    def move_down(self):
+        self.rect.y += -20
 
 all_sprites = pygame.sprite.Group()
 food_list = []
 BAD_food_list = []
+enemy_list = []
 
 player = Player()
 all_sprites.add(player)
@@ -130,10 +171,15 @@ for i in range(100):
     all_sprites.add(BAD_food)
     BAD_food_list.append(BAD_food)
     all_food.append(BAD_food)
-
-x_cor_player = x_size*5
-y_cor_player = y_size*5
+for i in range(100):
+    enemy = Enemy()
+    all_sprites.add(enemy)
+    enemy_list.append(enemy)
+    all_food.append(enemy)
+x_cor_player = x_size*5/2
+y_cor_player = y_size*5/2
 # Most important code here
+fireball = None
 while not done:
     clock.tick(120)
     for event in pygame.event.get():
@@ -177,8 +223,13 @@ while not done:
                     player.move_left()
                 elif player.rect.centerx > x_size // 2:
                     player.move_left()
-
-
+            
+            if event.key == K_f:
+                if fireball is None or pygame.time.get_ticks() - fireball.last >= fireball.cooldown:
+                    fireball = FireBall()
+                    all_sprites.add(fireball)
+                
+                
 
         
     for food in food_list:
@@ -187,15 +238,30 @@ while not done:
             food_list.remove(food)
             all_food.remove(food)
             player.grow()
-        for foodz in BAD_food_list:
-            if player.rect.colliderect(foodz):
-                foodz.kill()
-                BAD_food_list.remove(foodz)
-                all_food.remove(foodz)
-                player.anti_grow()
-    print(y_cor_player)
+    for foodz in BAD_food_list:
+        if player.rect.colliderect(foodz):
+            foodz.kill()
+            BAD_food_list.remove(foodz)
+            all_food.remove(foodz)
+            player.anti_grow()
+    for enemy in enemy_list:
+        if player.rect.colliderect(enemy):
+            enemy.kill()
+            enemy_list.remove(enemy)
+            all_food.remove(enemy)
+            player.super_anti_grow()
+        elif fireball != None:
+            if fireball.rect.colliderect(enemy):
+                enemy.kill()
+                enemy_list.remove(enemy)
+                all_food.remove(enemy)
+                player.super_grow()
+    if fireball is not None:
+        fireball.move()
+        if pygame.time.get_ticks() - fireball.last >= fireball.cooldown:
+            fireball.kill()
+            fireball = None
     screen.fill(BLACK)
     all_sprites.draw(screen)
     pygame.display.update()
-
 pygame.quit()
