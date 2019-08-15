@@ -21,10 +21,11 @@ food_img = pygame.image.load(os.path.join(img_folder, 'food.png')).convert()
 BAD_food_img = pygame.image.load(os.path.join(img_folder, 'bad_food.png')).convert()
 fire_ball_img = pygame.image.load(os.path.join(img_folder, 'fire_ball.png')).convert()
 enemy_img = pygame.image.load(os.path.join(img_folder, 'enemy.png')).convert()
+lightning_bolt_img = pygame.image.load(os.path.join(img_folder, 'lightning_bolt.png')).convert()
 
 # Varible Used "while" Loop
 done = False
- 
+
 
 # Setting Caption of Pygame Tab
 pygame.display.set_caption("Block Rush Game")
@@ -77,6 +78,9 @@ class Player(pygame.sprite.Sprite):
     def anti_grow(self):
         width, height = self.image.get_size()
         self.image = pygame.transform.scale(player_img, (int(width - 20), int(height - 20)))
+        # if self.image.get_size()[0] < 20 or self.image.get_size()[1] < 20:
+        #     done = True
+        # else: 
         self.rect = self.rect.inflate(-20,-20)
     def super_anti_grow(self):
         width, height = self.image.get_size()
@@ -131,8 +135,14 @@ class FireBall(pygame.sprite.Sprite):
         self.rect.y = y_size/2
         self.cooldown = 4000
         self.last = pygame.time.get_ticks()
-    def move(self):
+    def shoot_right(self):
         self.rect.x += 20
+    def shoot_left(self):
+        self.rect.x += -20
+    def shoot_up(self):
+        self.rect.y += 20
+    def shoot_down(self):
+        self.rect.y += -20
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -150,7 +160,6 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y += 20
     def move_down(self):
         self.rect.y += -20
-
 all_sprites = pygame.sprite.Group()
 food_list = []
 BAD_food_list = []
@@ -178,16 +187,17 @@ for i in range(100):
     all_food.append(enemy)
 x_cor_player = x_size*5/2
 y_cor_player = y_size*5/2
-# Most important code here
+
 fireball = None
 while not done:
     clock.tick(120)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-      
+    
         if event.type == KEYDOWN:
             if event.key == K_w:
+                fireball_con = 1
                 for food in all_food:
                     food.move_up()
                 y_cor_player += 20 
@@ -197,6 +207,7 @@ while not done:
                     player.move_down()
 
             if event.key == K_s:
+                fireball_con = 2
                 for food in all_food:
                     food.move_down()
                 y_cor_player += -20
@@ -207,6 +218,7 @@ while not done:
 
 
             if event.key == K_a:
+                fireball_con = 3
                 for food in all_food:
                     food.move_left()
                 x_cor_player += -20
@@ -216,6 +228,7 @@ while not done:
                     player.move_right()
 
             if event.key == K_d:
+                fireball_con = 4
                 for food in all_food:
                     food.move_right()
                 x_cor_player += 20
@@ -257,10 +270,16 @@ while not done:
                 all_food.remove(enemy)
                 player.super_grow()
     if fireball is not None:
-        fireball.move()
-        if pygame.time.get_ticks() - fireball.last >= fireball.cooldown:
+        fireball.shoot_right()
+        if fireball.rect.x == 1080:
             fireball.kill()
             fireball = None
+        elif pygame.time.get_ticks() - fireball.last >= fireball.cooldown:     
+            fireball.kill()
+            fireball = None
+
+    if player.image.get_size() == (1,1):
+        done = True
     screen.fill(BLACK)
     all_sprites.draw(screen)
     pygame.display.update()
