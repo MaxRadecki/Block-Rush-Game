@@ -5,8 +5,9 @@ import pygame
 import sys
 import os
 from time import sleep
+import math
 
-# intalize Pygame
+# Intalize Pygame
 pygame.init()
 
 # Set Up Screen
@@ -14,6 +15,7 @@ x_size = 1200
 y_size = 750
 screen = pygame.display.set_mode((x_size, y_size))
 
+# Intalizing Sprites
 game_folder = os.path.dirname(__file__)
 img_folder = os.path.join(game_folder, 'images')
 player_img = pygame.image.load(os.path.join(img_folder, 'happy_face.png')).convert()
@@ -23,7 +25,7 @@ fire_ball_img = pygame.image.load(os.path.join(img_folder, 'fire_ball.png')).con
 enemy_img = pygame.image.load(os.path.join(img_folder, 'enemy.png')).convert()
 lightning_bolt_img = pygame.image.load(os.path.join(img_folder, 'lightning_bolt.png')).convert()
 
-# Varible Used "while" Loop
+# Varible Used in "while" Loop
 done = False
 
 
@@ -48,12 +50,14 @@ Purple = (128,0,128)
 Teal = 	(0,128,128)
 Navy = (0,0,128)
 
+# Simple Height and Width Used in the Sprite's Classes
 WIDTH = 50
 HEIGHT = 50
 
-
+# Intalizing Clock Varible
 clock = pygame.time.Clock()
 
+# Player Class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -62,6 +66,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (x_size // 2, y_size // 2)
         self.rect.x = x_size / 2
         self.rect.y = y_size / 2
+# Moving Functions of Player
     def move_right(self):
         self.rect.x += 20
     def move_left(self):
@@ -70,7 +75,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.y += -20
     def move_down(self):
         self.rect.y += 20
-    
+
+# The Growth or Anti-growth of the Player
     def grow(self):
         width, height = self.image.get_size()
         self.image = pygame.transform.scale(player_img, (int(width + 20),int(height + 20)))
@@ -91,6 +97,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img, (int(width + 40),int(height + 40)))
         self.rect = self.rect.inflate(40,40)
 
+# The Food Class
 class Food(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -99,23 +106,7 @@ class Food(pygame.sprite.Sprite):
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
         self.rect.x = randint(0,x_size*5)
         self.rect.y = randint(0,y_size*5)
-    def move_right(self):
-        self.rect.x += -20
-    def move_left(self):
-        self.rect.x += 20
-    def move_up(self):
-        self.rect.y += 20
-    def move_down(self):
-        self.rect.y += -20
-    
-class BAD_Food(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = BAD_food_img
-        self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT / 2)
-        self.rect.x = randint(-x_size*2.5,x_size*2.5)
-        self.rect.y = randint(0,y_size*5)
+# Move Functions of Food Class
     def move_right(self):
         self.rect.x += -20
     def move_left(self):
@@ -125,6 +116,26 @@ class BAD_Food(pygame.sprite.Sprite):
     def move_down(self):
         self.rect.y += -20
 
+# BAD_food Class
+class BAD_Food(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = BAD_food_img
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.rect.x = randint(-x_size*2.5,x_size*2.5)
+        self.rect.y = randint(0,y_size*5)
+# Move Functions of BAD_food Class
+    def move_right(self):
+        self.rect.x += -20
+    def move_left(self):
+        self.rect.x += 20
+    def move_up(self):
+        self.rect.y += 20
+    def move_down(self):
+        self.rect.y += -20
+
+# The Fireball Class
 class FireBall(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -135,6 +146,7 @@ class FireBall(pygame.sprite.Sprite):
         self.rect.y = y_size/2
         self.cooldown = 4000
         self.last = pygame.time.get_ticks()
+# Shoot Functions of Fireball
     def shoot_right(self):
         self.rect.x += 20
     def shoot_left(self):
@@ -144,6 +156,7 @@ class FireBall(pygame.sprite.Sprite):
     def shoot_down(self):
         self.rect.y += -20
 
+# The Enemy Class
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -152,6 +165,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
         self.rect.x = randint(-x_size*2.5,x_size*2.5)
         self.rect.y = randint(0,y_size*5)
+# Move Functions of Enemy
     def move_right(self):
         self.rect.x += -20
     def move_left(self):
@@ -160,16 +174,21 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y += 20
     def move_down(self):
         self.rect.y += -20
+
+# Setting of the all_sprites varible
 all_sprites = pygame.sprite.Group()
+
+# The Lists for Multiple Use of Classes in Game
 food_list = []
 BAD_food_list = []
 enemy_list = []
-
-player = Player()
-all_sprites.add(player)
 all_food = []
 
+# Setting up the Player in a Varible Form
+player = Player()
+all_sprites.add(player)
 
+# Creating Multiple Items
 for i in range(100):
     food = Food()
     all_sprites.add(food)
@@ -185,17 +204,27 @@ for i in range(100):
     all_sprites.add(enemy)
     enemy_list.append(enemy)
     all_food.append(enemy)
+
+# Coordinates of the Player
 x_cor_player = x_size*5/2
 y_cor_player = y_size*5/2
 
+# Intalizing Fireball as a Variable
 fireball = None
+
+# Game While Loop
 while not done:
+    # Game Speed
     clock.tick(120)
+    # Event Part of While Loop
     for event in pygame.event.get():
+        # Exit Out Part of While Loop
         if event.type == pygame.QUIT:
             sys.exit()
-    
+        
+        # Key Pressing Part
         if event.type == KEYDOWN:
+            # W Key
             if event.key == K_w:
                 fireball_con = 1
                 for food in all_food:
@@ -205,7 +234,7 @@ while not done:
                     player.move.down
                 elif player.rect.centery < y_size // 2:
                     player.move_down()
-
+            # S Key
             if event.key == K_s:
                 fireball_con = 2
                 for food in all_food:
@@ -216,7 +245,7 @@ while not done:
                 elif player.rect.centery > y_size // 2:
                     player.move_up
 
-
+            # A Key
             if event.key == K_a:
                 fireball_con = 3
                 for food in all_food:
@@ -227,6 +256,7 @@ while not done:
                 elif player.rect.centerx < x_size // 2:
                     player.move_right()
 
+            # D Key
             if event.key == K_d:
                 fireball_con = 4
                 for food in all_food:
@@ -237,6 +267,7 @@ while not done:
                 elif player.rect.centerx > x_size // 2:
                     player.move_left()
             
+            # F Key
             if event.key == K_f:
                 if fireball is None or pygame.time.get_ticks() - fireball.last >= fireball.cooldown:
                     fireball = FireBall()
@@ -244,7 +275,7 @@ while not done:
                 
                 
 
-        
+    # Colliding Loops   
     for food in food_list:
         if player.rect.colliderect(food):
             food.kill()
@@ -269,6 +300,8 @@ while not done:
                 enemy_list.remove(enemy)
                 all_food.remove(enemy)
                 player.super_grow()
+    
+    # Shooting Part With Fireball
     if fireball is not None:
         fireball.shoot_right()
         if fireball.rect.x == 1080:
@@ -278,9 +311,17 @@ while not done:
             fireball.kill()
             fireball = None
 
-    if player.image.get_size() == (1,1):
-        done = True
+    # if player.image.get_size() == (1,1):
+    #     done = True
+
+    # Screen Fill Black
     screen.fill(BLACK)
+
+    # Draw All the Sprites on the Screen
     all_sprites.draw(screen)
+
+    # Update the Screeen
     pygame.display.update()
+
+# End of Everything
 pygame.quit()
